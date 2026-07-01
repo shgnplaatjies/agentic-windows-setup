@@ -1,13 +1,12 @@
 # Agentic Engineering Setup for Windows
 
-A Windows-native port of the terminal-first "agentic engineering" workflow described by **Kun**
-(ex-Meta/Microsoft/Atlassian principal engineer) in his YouTube walkthrough of how he ships
-40-50 PRs a day with a crew of coding agents. His original tools and workflow are macOS-first;
-this repo documents how to replicate the same capabilities on Windows 10/11, including the
-places where a direct port isn't possible and a different tool had to be substituted.
+A Windows-native port of **Kun**'s terminal-first agentic engineering workflow. His original
+tools and workflow are macOS-first; this repo documents how to replicate the same capabilities
+on Windows 10/11, including where a direct port isn't possible and a different tool had to be
+substituted.
 
 This is a **guide + best-effort automation**, not a single magic installer. Several steps
-require GUI interaction, admin elevation, or a reboot and cannot be safely scripted — those
+require GUI interaction, admin elevation, or a reboot and cannot be safely scripted - those
 are called out explicitly below and in the scripts.
 
 ## Table of contents
@@ -40,13 +39,13 @@ are called out explicitly below and in the scripts.
 
 On Windows, environment/PATH changes made by `winget` installers, `setx`, or
 `[System.Environment]::SetEnvironmentVariable(...)` do **not** become visible to already-running
-shells or automation tooling — only to genuinely new terminal sessions started afterward. If a
+shells or automation tooling - only to genuinely new terminal sessions started afterward. If a
 command "isn't recognized" right after installing it, either:
 
 - open a brand new terminal window, or
 - call the tool by its full executable path for that one invocation.
 
-This trips up scripted setups more than manual ones — keep it in mind if you're driving this
+This trips up scripted setups more than manual ones - keep it in mind if you're driving this
 guide from an agent/automation session rather than typing commands by hand yourself.
 
 ## 1. Terminal & editor
@@ -59,11 +58,11 @@ multiplexer, since tmux itself doesn't run natively on Windows. A well-configure
 - Panes: split/nav/resize/zoom/rotate/close
 - Tabs (= tmux windows) and Workspaces (= tmux sessions)
 - Vim-style copy mode with search and clipboard yank
-- Quick-select for URLs/paths/hashes (no tmux equivalent — a bonus)
+- Quick-select for URLs/paths/hashes (no tmux equivalent - a bonus)
 
 **Known gap:** WezTerm does not support Unix-domain mux serving natively on Windows, so there's
 no true background daemon you can detach from and reattach to later the way tmux's server works
-— panes/tabs only persist while the WezTerm GUI process itself is alive. True detach/reattach
+- panes/tabs only persist while the WezTerm GUI process itself is alive. True detach/reattach
 (e.g. for phone/remote access) would require running the mux server inside WSL instead.
 
 See `scripts/01-neovim.ps1` for automated install of **[Neovim](https://github.com/neovim/neovim)**
@@ -73,7 +72,7 @@ Neovim on Windows defaults to `%LOCALAPPDATA%\nvim` for its config, not `~/.conf
 Unix. To keep config paths consistent with Unix conventions (and with the rest of this stack),
 set `XDG_CONFIG_HOME` as a persistent **user** environment variable pointing at
 `$env:USERPROFILE\.config`, then place `init.lua` at `$env:USERPROFILE\.config\nvim\init.lua`.
-This is a GUI-adjacent step (`setx`/`SetEnvironmentVariable` only takes effect in new shells —
+This is a GUI-adjacent step (`setx`/`SetEnvironmentVariable` only takes effect in new shells -
 see the gotcha above), so verify it in a fresh terminal.
 
 ## 2. Agent skills tooling
@@ -90,11 +89,11 @@ See `scripts/02-skills-cli.ps1`.
 
 ## 3. Voice input
 
-Kun's tutorial uses **[OpenSuperWhisper](https://github.com/starmel/OpenSuperWhisper)** (by
-starmel) — a free, local, Whisper-based dictation app. It is **macOS-only** (Apple Silicon),
+The macOS original is **[OpenSuperWhisper](https://github.com/starmel/OpenSuperWhisper)** (by
+starmel) - a free, local, Whisper-based dictation app. It is **macOS-only** (Apple Silicon),
 so it has no direct Windows port.
 
-**Windows substitute: [Handy](https://github.com/cjpais/Handy)** (by cjpais) — also free, local,
+**Windows substitute: [Handy](https://github.com/cjpais/Handy)** (by cjpais) - also free, local,
 and open source, with a comparable feature set (push-to-talk hotkey, fully offline transcription,
 paste-into-active-field). Install via:
 
@@ -105,19 +104,19 @@ winget install cjpais.Handy
 Notes from real-world setup:
 
 - Handy offers multiple STT engines: Whisper-family models (accelerated via **Vulkan** on
-  Windows — the installer pulls in the Vulkan Runtime as a dependency) and ONNX-based engines
+  Windows - the installer pulls in the Vulkan Runtime as a dependency) and ONNX-based engines
   (Parakeet V2/V3, Moonshine, SenseVoice, GigaAM).
 - ONNX engines can use GPU acceleration on Windows via **DirectML**, which works with any
   DirectX 12-capable GPU (including older NVIDIA cards). **Important:** Handy's "Auto"
   accelerator mode does **not** include DirectML (it needs special ORT session settings that
-  would hurt other backends) — you must explicitly select "DirectML" in settings for GPU
+  would hurt other backends) - you must explicitly select "DirectML" in settings for GPU
   acceleration to actually apply to Parakeet/Moonshine.
 - True CUDA acceleration is not in the prebuilt binary (would require building from source, and
-  even then newer CUDA toolkits are dropping support for older GPU architectures) — DirectML is
+  even then newer CUDA toolkits are dropping support for older GPU architectures) - DirectML is
   the practical path on Windows.
 - Look for an "auto-submit" / "press Enter after paste" option in settings (may be gated behind
   an experimental-features toggle) if you want dictated prompts to submit automatically in chat
-  tools — very useful for agent workflows.
+  tools - very useful for agent workflows.
 - First-run setup (mic permission, model download, hotkey binding, accelerator selection) is a
   GUI-only step and cannot be scripted.
 
@@ -128,11 +127,11 @@ See `scripts/03-voice-dictation.ps1` for the winget install; everything else is 
 **[AXI](https://axi.md/)** (Agent eXperience Interface, by Kun) is a set of design principles
 for token-efficient, agent-first CLI design, plus reference implementations:
 
-- **[gh-axi](https://github.com/kunchenguid/axi)** — GitHub operations. Requires the real
+- **[gh-axi](https://github.com/kunchenguid/axi)** - GitHub operations. Requires the real
   **[GitHub CLI](https://cli.github.com/)** (`gh`) installed and authenticated
-  (`winget install GitHub.cli`, then `gh auth login` — an interactive browser OAuth flow, cannot
+  (`winget install GitHub.cli`, then `gh auth login` - an interactive browser OAuth flow, cannot
   be scripted).
-- **[chrome-devtools-axi](https://github.com/kunchenguid/axi)** — browser automation, works out
+- **[chrome-devtools-axi](https://github.com/kunchenguid/axi)** - browser automation, works out
   of the box via `npx -y chrome-devtools-axi`.
 
 Both are used via `npx -y <tool> <command>` with no persistent global install required.
@@ -174,7 +173,7 @@ See `scripts/06-no-mistakes.ps1`.
 ## 7. gnhf (good night have fun)
 
 **[gnhf](https://github.com/kunchenguid/gnhf)** (by Kun) runs an agent in an autonomous
-iteration loop against an objective (with iteration/token caps and stop conditions) — useful for
+iteration loop against an objective (with iteration/token caps and stop conditions) - useful for
 long unattended runs. Install via npm:
 
 ```powershell
@@ -182,7 +181,7 @@ npm install -g gnhf
 ```
 
 It ships a `--mock` flag that simulates a full run (fake reasoning steps, commits, a live
-moon-phase TUI) without spending real agent time/tokens — good for smoke-testing the install.
+moon-phase TUI) without spending real agent time/tokens - good for smoke-testing the install.
 
 See `scripts/07-gnhf.ps1`.
 
@@ -196,8 +195,8 @@ git worktrees so multiple agents can work the same repo in parallel without manu
 irm https://kunchenguid.github.io/treehouse/install.ps1 | iex
 ```
 
-Key commands: `treehouse init` (writes `treehouse.toml`), `treehouse get` (interactive — opens a
-subshell in a leased worktree), `treehouse get --lease` (non-interactive — prints just the
+Key commands: `treehouse init` (writes `treehouse.toml`), `treehouse get` (interactive - opens a
+subshell in a leased worktree), `treehouse get --lease` (non-interactive - prints just the
 worktree path, for scripting), `treehouse status`, `treehouse return <path>`.
 
 See `scripts/08-treehouse.ps1`.
@@ -205,7 +204,7 @@ See `scripts/08-treehouse.ps1`.
 ## 9. WSL2 + firstmate
 
 **[firstmate](https://github.com/kunchenguid/firstmate)** (by Kun) is the top-level multi-agent
-orchestrator — you talk to one "first mate" agent and it dispatches/supervises a crew of other
+orchestrator - you talk to one "first mate" agent and it dispatches/supervises a crew of other
 agents across tmux windows and treehouse worktrees. It **requires macOS or Linux + tmux**, so on
 Windows it has to run inside **WSL2** (WSL1 is not sufficient).
 
@@ -218,7 +217,7 @@ wsl --set-version <DistroName> 2
 ```
 
 **Gotcha:** this can fail with `HCS_E_HYPERV_NOT_INSTALLED` even when your CPU/firmware fully
-supports virtualization, for two independent reasons — check both:
+supports virtualization, for two independent reasons - check both:
 
 1. The **"Virtual Machine Platform"** Windows optional feature isn't enabled. Fix (elevated
    PowerShell, then reboot):
@@ -231,15 +230,15 @@ supports virtualization, for two independent reasons — check both:
    bcdedit /set hypervisorlaunchtype auto
    ```
 
-Both require UAC elevation and a reboot — this cannot be safely scripted end-to-end from an
+Both require UAC elevation and a reboot - this cannot be safely scripted end-to-end from an
 unattended/agent session; run these two yourself and reboot before continuing.
 
-### 9b. Native Linux tooling inside WSL2 — don't use the Windows interop binaries
+### 9b. Native Linux tooling inside WSL2 - don't use the Windows interop binaries
 
 WSL2 can see your Windows PATH via interop (`/mnt/c/...`), which means `node`/`npm`/`claude`
-"work" out of the box inside WSL — but they're actually crossing the Windows/Linux boundary on
+"work" out of the box inside WSL - but they're actually crossing the Windows/Linux boundary on
 every invocation. This matters a lot for firstmate, which spawns many tmux panes each running an
-agent process — do this properly instead:
+agent process - do this properly instead:
 
 ```bash
 # Remove any apt-installed Node if present, to avoid two Node installs fighting over PATH
@@ -255,7 +254,7 @@ npm install -g @anthropic-ai/claude-code
 ```
 
 **npm gotcha:** newer npm (v11+) blocks postinstall scripts for global packages and suggests
-`npm approve-scripts` — which actually errors with `EGLOBAL` and does not work for global
+`npm approve-scripts` - which actually errors with `EGLOBAL` and does not work for global
 installs at all (see [npm/cli#9463](https://github.com/npm/cli/issues/9463), a known bug in that
 new "unreviewed scripts" feature). The real fix for global installs is:
 
@@ -263,8 +262,8 @@ new "unreviewed scripts" feature). The real fix for global installs is:
 npm install -g --allow-scripts=<package-name> <package-name>
 ```
 
-Verify with `which node` / `which claude` in a **fresh** shell — both should resolve under
-`~/.nvm/versions/node/...`, not `/mnt/c/...`. Then run `claude` on its own once to log in — this
+Verify with `which node` / `which claude` in a **fresh** shell - both should resolve under
+`~/.nvm/versions/node/...`, not `/mnt/c/...`. Then run `claude` on its own once to log in - this
 is a separate credential from your Windows-side Claude Code install (different filesystem, so a
 different `~/.claude`), and it's an interactive login you should run yourself.
 
@@ -277,7 +276,7 @@ cd firstmate && claude
 
 Running `claude` inside the clone triggers firstmate's one-time interactive setup (choose your
 agent, choose validation strictness, describe a first task). This is inherently conversational
-— run it yourself rather than scripting it. firstmate resolves the agent binary dynamically via
+- run it yourself rather than scripting it. firstmate resolves the agent binary dynamically via
 `PATH` at dispatch time (it does not hardcode an absolute path during setup), so once the native
 binary from step 9b is first on `PATH`, firstmate will use it automatically.
 
@@ -294,7 +293,7 @@ approach uses two mechanisms: **memory files** and **skills**.
 
 Claude Code loads a user-level memory file into the system prompt of **every** session, across
 every project, at `$env:USERPROFILE\.claude\CLAUDE.md`. Because it's loaded unconditionally on
-every request, keep it short — a bloated global file silently costs tokens on every single
+every request, keep it short - a bloated global file silently costs tokens on every single
 message, whether that content is relevant or not.
 
 Most other agent CLIs converge on a separate, cross-tool standard: a plain `AGENTS.md` file (see
@@ -309,7 +308,7 @@ New-Item -ItemType SymbolicLink -Path "$env:USERPROFILE\.claude\CLAUDE.md" -Targ
 cmd /c mklink /H "$env:USERPROFILE\.claude\CLAUDE.md" "$env:USERPROFILE\AGENTS.md"
 ```
 
-Keep the content itself to durable, cross-project style/behavior preferences — for example:
+Keep the content itself to durable, cross-project style/behavior preferences - for example:
 
 ```markdown
 ## General Guidelines
@@ -323,13 +322,13 @@ Keep the content itself to durable, cross-project style/behavior preferences —
 ```
 
 That last rule is worth calling out: agents default to writing narrow unit tests, which often
-don't cover the actual product behavior you care about — reproducing the bug in an end-to-end
+don't cover the actual product behavior you care about - reproducing the bug in an end-to-end
 setting first catches the real problem, not just a symptom of it.
 
 ### Project-level memory file
 
 Each project can additionally have its own `CLAUDE.md`/`AGENTS.md` (same link trick applies) at
-the repo root. This one is expected to be more verbose — repo layout, terminology, key components,
+the repo root. This one is expected to be more verbose - repo layout, terminology, key components,
 conventions, how to run end-to-end tests for *this* project. The practical way to build it up is
 not to write it all up front, but to correct the agent in the moment whenever it does something
 wrong, and ask it to remember the correction here. Over time this file becomes the collective
@@ -342,7 +341,7 @@ Project memory files tend to bloat over time. The fix is to move content that's 
 progressive disclosure: only a short description is loaded into the system prompt by default, and
 the full instructions are only read when the agent actually decides the skill is relevant. If your
 project memory file has a whole section on, say, end-to-end testing conventions, that section is
-dead weight on every session that's just answering a question — move it into a skill and it only
+dead weight on every session that's just answering a question - move it into a skill and it only
 costs tokens when it's actually used.
 
 Section 2 above already covers installing the `npx skills` CLI and Anthropic's own
@@ -351,14 +350,11 @@ skill on request (e.g. "extract the end-to-end testing instructions in AGENTS.md
 skill").
 
 **A caution on third-party skills:** don't install skills from the internet just because they're
-popular. A skill can instruct an agent to run arbitrary commands on your machine — a malicious or
-careless one can exfiltrate credentials without your knowledge — and popularity (GitHub stars)
-says nothing about whether a skill was rigorously evaluated. Kun's tutorial cites his own
-benchmark of a widely-shared, high-star community skill that reportedly made agents use ~5% more
-tokens for worse results; we haven't independently verified that specific number, but the general
-principle — stars measure popularity, not quality or safety — is sound regardless. Prefer skills
-from the tool's original author (like `skill-creator` from Anthropic, or `lavish`/AXI skills
-directly from Kun's own repos) over unaudited third-party ones.
+popular. A skill can instruct an agent to run arbitrary commands on your machine, so a malicious
+or careless one can exfiltrate credentials without your knowledge, and popularity (GitHub stars)
+says nothing about whether a skill was rigorously evaluated or actually improves results. Prefer
+skills from the tool's original author (like `skill-creator` from Anthropic, or `lavish`/AXI
+skills directly from Kun's own repos) over unaudited third-party ones.
 
 ## Corporate / managed machines
 
@@ -377,7 +373,7 @@ it" rather than something guaranteed to succeed unattended.
 
 ## TODO / future work
 
-Deferred to a later session — **not done yet**:
+Deferred to a later session - **not done yet**:
 
 - Replicate this exact stack on additional personal devices so agents can run in parallel across
   machines (treehouse/firstmate coordination across hosts is untested).
@@ -386,9 +382,9 @@ Deferred to a later session — **not done yet**:
 
 ## Credits
 
-This entire workflow concept — and every `kunchenguid/*` tool below — comes from **Kun**'s
-YouTube walkthrough of his agentic engineering setup. This repo only documents how to run the
-same ideas on Windows; all credit for the design and tooling goes to the original authors.
+This entire workflow concept, and every `kunchenguid/*` tool below, comes from **Kun**. This
+repo only documents how to run the same ideas on Windows; all credit for the design and tooling
+goes to the original authors.
 
 | Tool | Author / Org | Link |
 |---|---|---|
@@ -412,4 +408,4 @@ same ideas on Windows; all credit for the design and tooling goes to the origina
 ## License
 
 The guide and scripts in this repo are MIT licensed (see `LICENSE`). All third-party tools
-referenced above carry their own separate licenses — check each project before use.
+referenced above carry their own separate licenses - check each project before use.
