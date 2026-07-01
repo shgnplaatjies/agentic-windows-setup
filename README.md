@@ -22,10 +22,11 @@ are called out explicitly below and in the scripts.
 8. [gnhf (good night have fun)](#7-gnhf-good-night-have-fun)
 9. [treehouse](#8-treehouse)
 10. [WSL2 + firstmate](#9-wsl2--firstmate)
-11. [Environment/PATH gotcha](#environmentpath-gotcha-read-this-first)
-12. [Corporate/managed machines](#corporate--managed-machines)
-13. [TODO / future work](#todo--future-work)
-14. [Credits](#credits)
+11. [Onboarding crew mates: memory files & skills](#10-onboarding-crew-mates-memory-files--skills)
+12. [Environment/PATH gotcha](#environmentpath-gotcha-read-this-first)
+13. [Corporate/managed machines](#corporate--managed-machines)
+14. [TODO / future work](#todo--future-work)
+15. [Credits](#credits)
 
 ## Prerequisites
 
@@ -282,6 +283,82 @@ binary from step 9b is first on `PATH`, firstmate will use it automatically.
 
 See `scripts/09-wsl2-native-check.ps1` (Windows-side WSL2 conversion + checks) and
 `scripts/10-wsl2-firstmate.sh` (run *inside* WSL2, covers 9b/9c).
+
+## 10. Onboarding crew mates: memory files & skills
+
+Installing the tools above gets you a ship. This section is about ramping up the "crew mates"
+(agent sessions) so they know how you like to work, without re-explaining it every time. Kun's
+approach uses two mechanisms: **memory files** and **skills**.
+
+### Global memory file
+
+Claude Code loads a user-level memory file into the system prompt of **every** session, across
+every project, at `$env:USERPROFILE\.claude\CLAUDE.md`. Because it's loaded unconditionally on
+every request, keep it short — a bloated global file silently costs tokens on every single
+message, whether that content is relevant or not.
+
+Most other agent CLIs converge on a separate, cross-tool standard: a plain `AGENTS.md` file (see
+[agents.md](https://agents.md)). Rather than maintaining two separate files, link them so they're
+the same file under two names:
+
+```powershell
+# Requires admin elevation for a true symlink:
+New-Item -ItemType SymbolicLink -Path "$env:USERPROFILE\.claude\CLAUDE.md" -Target "$env:USERPROFILE\AGENTS.md"
+
+# No elevation needed, same effect, same-volume only:
+cmd /c mklink /H "$env:USERPROFILE\.claude\CLAUDE.md" "$env:USERPROFILE\AGENTS.md"
+```
+
+Keep the content itself to durable, cross-project style/behavior preferences — for example:
+
+```markdown
+## General Guidelines
+- Never use the em dash. Use a plain dash instead.
+- When writing commit messages, never auto-add the agent name as co-author.
+- Never manually modify CHANGELOG.md files or any files marked as auto-generated.
+- When making technical decisions, do not give much weight to development cost.
+  Prefer quality, simplicity, robustness, scalability, and long-term maintainability.
+- When doing bug fixes, always start by reproducing the bug end-to-end, as closely
+  aligned with how an end user would experience it, before attempting a fix.
+```
+
+That last rule is worth calling out: agents default to writing narrow unit tests, which often
+don't cover the actual product behavior you care about — reproducing the bug in an end-to-end
+setting first catches the real problem, not just a symptom of it.
+
+### Project-level memory file
+
+Each project can additionally have its own `CLAUDE.md`/`AGENTS.md` (same link trick applies) at
+the repo root. This one is expected to be more verbose — repo layout, terminology, key components,
+conventions, how to run end-to-end tests for *this* project. The practical way to build it up is
+not to write it all up front, but to correct the agent in the moment whenever it does something
+wrong, and ask it to remember the correction here. Over time this file becomes the collective
+learning of every session that's worked in the repo.
+
+### Skills: moving conditional knowledge out of memory
+
+Project memory files tend to bloat over time. The fix is to move content that's only needed
+*sometimes* out of the always-loaded memory file and into a **skill** instead. Skills use
+progressive disclosure: only a short description is loaded into the system prompt by default, and
+the full instructions are only read when the agent actually decides the skill is relevant. If your
+project memory file has a whole section on, say, end-to-end testing conventions, that section is
+dead weight on every session that's just answering a question — move it into a skill and it only
+costs tokens when it's actually used.
+
+Section 2 above already covers installing the `npx skills` CLI and Anthropic's own
+`skill-creator` skill, which teaches an agent how to extract memory-file content into a proper
+skill on request (e.g. "extract the end-to-end testing instructions in AGENTS.md into a project
+skill").
+
+**A caution on third-party skills:** don't install skills from the internet just because they're
+popular. A skill can instruct an agent to run arbitrary commands on your machine — a malicious or
+careless one can exfiltrate credentials without your knowledge — and popularity (GitHub stars)
+says nothing about whether a skill was rigorously evaluated. Kun's tutorial cites his own
+benchmark of a widely-shared, high-star community skill that reportedly made agents use ~5% more
+tokens for worse results; we haven't independently verified that specific number, but the general
+principle — stars measure popularity, not quality or safety — is sound regardless. Prefer skills
+from the tool's original author (like `skill-creator` from Anthropic, or `lavish`/AXI skills
+directly from Kun's own repos) over unaudited third-party ones.
 
 ## Corporate / managed machines
 
